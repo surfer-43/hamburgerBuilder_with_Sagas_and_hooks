@@ -1,0 +1,23 @@
+.HamburgerIconContainer {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    background: none;
+    border: none;
+}
+
+.HamburgerIconContainer span {
+    display: block;
+    background-color: rgba(0,0,0,.5);
+    width: 30px;
+    height: 5px;
+    margin: 1px 0px;
+}
+
+@media (min-width: 500px) {
+    .HamburgerIconContainer {
+        display: none;
+    }
+}
