@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { connect } from 'react-redux'
+import React, { useState, useEffect, useCallback } from 'react';
+import { connect, useDispatch, useSelector } from 'react-redux'
 
 // custom components
 import Aux from '../../hoc/Aux/Aux';
@@ -26,11 +26,46 @@ import * as actions from '../../store/actions/index';
  * we get a named export giving us access to the class so we can test it
  */
 const burgerBuilder = (props) => {
-    const { initIngredients } = props;
     /**
      * initial state of the application
      */
     const [ inCheckout, setInCheckout ] = useState(false);
+
+    /**
+     * using the redux hooks to extract actions from the props
+     */
+    const dispatch = useDispatch();
+
+    /**
+     * special case - initIngredients() is used inside useEffect which is called every time
+     * initIngredients is changed/created which causes a rerender and loops.
+     * using useCallback to wrap this function will prevent that because we are
+     * creating an instance of the function in a closure? - confirm
+     */
+    const initIngredients = useCallback(() => dispatch(actions.initIngredients()), []);
+
+    const addIngredient = (ingName) => dispatch(actions.addIngredient(ingName));
+    const removeIngredient = (ingName) => dispatch(actions.removeIngredient(ingName));
+    const initPurchase = () => dispatch(actions.purchaseInit());
+    const onSetAuthRedirectPath = (path) => dispatch(actions.setAuthRedirectPath(path));
+
+    const ings = useSelector( (state) => {
+        return state.burgerBuilder.ingredients
+    });
+
+    const price = useSelector( (state) => {
+        return state.burgerBuilder.totalPrice
+    });
+
+    const error = useSelector( (state) => {
+        return state.burgerBuilder.error
+    });
+
+    const authenticated = useSelector( (state) => {
+        return state.auth.token !== null
+    });
+
+
 
     useEffect(() => {
         initIngredients();
@@ -53,10 +88,10 @@ const burgerBuilder = (props) => {
     }
 
     const checkoutHandler = () => {
-        if(props.authenticated) {
+        if(authenticated) {
             setInCheckout(true)
         } else {
-            props.onSetAuthRedirectPath('/checkout');
+            onSetAuthRedirectPath('/checkout');
             props.history.push('/auth');
         }
     }
@@ -81,7 +116,7 @@ const burgerBuilder = (props) => {
         */
 
         // initializing the purchase state
-        props.initPurchase();
+        initPurchase();
 
         // with Redux:
         props.history.push({pathname: "/checkout"});
@@ -89,28 +124,28 @@ const burgerBuilder = (props) => {
     
     
         const disabledInfo = {
-            ...props.ings
+            ...ings
         };
 
-        let burger = props.error ? <p> Ingredients can't be loaded</p> : <Spinner /> 
+        let burger = error ? <p> Ingredients can't be loaded</p> : <Spinner /> 
         let orderSummary = null;
 
         for(let key in disabledInfo) {
             disabledInfo[key] = disabledInfo[key] <= 0 
         }
 
-        if(props.ings) {
+        if(ings) {
             burger = (
                 <Aux>
-                    <Burger ingredients={props.ings}/>
+                    <Burger ingredients={ings}/>
                     <BuildControls 
-                        ingredientAdded={props.addIngredient}
-                        ingredientRemoved={props.removeIngredient}
+                        ingredientAdded={addIngredient}
+                        ingredientRemoved={removeIngredient}
                         disabled={disabledInfo}
-                        purchasable={updatePurchaseState(props.ings)}
+                        purchasable={updatePurchaseState(ings)}
                         checkout={checkoutHandler}
-                        price={props.price}
-                        isAuth={props.authenticated}
+                        price={price}
+                        isAuth={authenticated}
                         modifyPrice={props.modifyPrice}
                     />  
                 </Aux>
@@ -119,8 +154,8 @@ const burgerBuilder = (props) => {
             orderSummary = <OrerSummary 
                 checkoutCancel={clearModal}
                 checkoutContinue={checkoutContinueHandler}
-                ingredients={props.ings}
-                price={props.price}
+                ingredients={ings}
+                price={price}
             />
         }
 
@@ -138,6 +173,19 @@ const burgerBuilder = (props) => {
     
 }
 
+/**
+ * if using the react redux hooks, it's not required to use 
+ * mapStateToProps or mapDispatchToProps
+ * use useDispatch, useSelector from react redux and then
+ * export without the connect function
+ */
+export default withErrorHandler(burgerBuilder, axios);
+
+
+/**
+ * this method is valid for functional components
+ * and will still work as expected
+ * 
 const mapStateToProps = state => {
     return {
         ings: state.burgerBuilder.ingredients,
@@ -157,8 +205,9 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-/**
+
  * the higher order component used here needs to be used with axios or some other
  * method to make http requests and handle interceptors
+ 
+ export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(burgerBuilder, axios));
  */
-export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(burgerBuilder, axios));
