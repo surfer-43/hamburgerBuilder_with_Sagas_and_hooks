@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { Redirect } from 'react-router-dom';
 
@@ -16,9 +16,10 @@ import classes from './Auth.css';
 import * as actions from '../../store/actions/index';
 
 
-class Auth extends Component {
-    state = {
-        controls: {
+const auth = props => {
+    const [controls, setControls] = useState(
+        {
+        
             email: {
                 elementType: 'input',
                 elementConfig: {
@@ -47,44 +48,44 @@ class Auth extends Component {
                 isValid: false,
                 touched: false
             }
-        },
-        isSignup: true
-    }
+    
+    })
+    
+    const [isSignup, setIsSignup] = useState( true );
+    
 
-    componentDidMount() {
-        if(!this.props.buildingBurger && this.props.authRedirectPath !== '/') {
-            this.props.onSetAuthRedirectPath(this.props.authRedirectPath);
+    useEffect(() => {
+        if(!props.buildingBurger && props.authRedirectPath !== '/') {
+            props.onSetAuthRedirectPath(props.authRedirectPath);
         }
-    }
+    }, [])
 
-    inputChangeHandler = (event, controlName) => {
-        const updatedControls = updateObj(this.state.controls, {
-            [controlName]: updateObj(this.state.controls[controlName], {
+    const inputChangeHandler = (event, controlName) => {
+        const updatedControls = updateObj(controls, {
+            [controlName]: updateObj(controls[controlName], {
                 value: event.target.value,
-                isValid: formValidation(event.target.value, this.state.controls[controlName].validations),
+                isValid: formValidation(event.target.value, controls[controlName].validations),
                 touched: true
             })
         })
-        this.setState({controls: updatedControls});
+        setControls(updatedControls);
     }
 
-    submitHandler = (event) => {
+    const submitHandler = (event) => {
         event.preventDefault();
-        this.props.onAuth(this.state.controls.email.value, this.state.controls.password.value, this.state.isSignup);
+        props.onAuth(controls.email.value, controls.password.value, isSignup);
     }
 
-    switchAuthState = () => {
-        this.setState(prevState => {
-            return {isSignup: !prevState.isSignup};
-        });
+    const switchAuthState = () => {
+        setIsSignup(!isSignup);
     }
 
-    render() {
+    
         const formElementArray = [];
-        for( let key in this.state.controls) {
+        for( let key in controls) {
             formElementArray.push({
                 id: key,
-                config: this.state.controls[key]
+                config: controls[key]
             })
         }
 
@@ -98,40 +99,40 @@ class Auth extends Component {
                     shouldValidate={elm.config.validations.required}
                     invalid={elm.config.isValid}
                     modified={elm.config.touched}
-                    changed={(event) => {this.inputChangeHandler(event, elm.id)}} 
+                    changed={(event) => {inputChangeHandler(event, elm.id)}} 
                 />
             )
         })
 
-        if(this.props.loading) {
+        if(props.loading) {
             form = <Spinner />;
         }
 
         let errorMessage = null;
-        if(this.props.error) {
+        if(props.error) {
             errorMessage = (
-                <p className={classes.error}>{this.props.error.message}</p>
+                <p className={classes.error}>{props.error.message}</p>
             )
         }
         let redirect = null;
-        if(this.props.authenticated) {
-            redirect = <Redirect to={this.props.authRedirectPath}/>;
+        if(props.authenticated) {
+            redirect = <Redirect to={props.authRedirectPath}/>;
         }
 
         return(
             <div className={classes.AuthData}>
                 {redirect}
                 {errorMessage}
-                <form onSubmit={this.submitHandler}>
+                <form onSubmit={submitHandler}>
                     {form}
                     <Button btnType='Success'>Submit</Button>
                 </form>
                 <Button 
-                    clicked={this.switchAuthState}
-                    btnType="Danger">Switch to {this.state.isSignup ? 'Signin' : 'Signup'}</Button>
+                    clicked={switchAuthState}
+                    btnType="Danger">Switch to {isSignup ? 'Signin' : 'Signup'}</Button>
             </div>
         )
-    }
+    
 }
 
 const mapStateToProps = state => {
@@ -152,4 +153,4 @@ const mapDispatchToProps = dispatch => {
         onSetAuthRedirectPath: (path) => dispatch(actions.setAuthRedirectPath(path))
     }
 }
-export default connect(mapStateToProps, mapDispatchToProps)(Auth);
+export default connect(mapStateToProps, mapDispatchToProps)(auth);
