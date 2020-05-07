@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useState } from "react";
 import { connect } from 'react-redux';
 
 import Button from "../../../components/UI/Button/Button";
@@ -12,145 +12,142 @@ import * as actionTypes from '../../../store/actions/index';
 
 import classes from "./ContactData.css";
 
-class ContactData extends Component {
-    state = {
-        orderForm: {
-            name: {
-                elementType: 'input',
-                elementConfig: {
-                    type: 'text',
-                    placeholder: 'Name'
-                },
-                value: "",
-                validation: {
-                    required: true
-                },
-                isValid: false,
-                modified: false
-            },
-            address: {
-                elementType: 'input',
-                elementConfig: {
-                    type: 'text',
-                    placeholder: 'Your street address'
-                },
-                value: "",
-                validation: {
-                    required: true
-                },
-                isValid: false,
-                modified: false
-            },
-            zipCode: {
-                elementType: 'input',
-                elementConfig: {
-                    type: 'text',
-                    placeholder: 'Your Zip Code'
-                },
-                value: "",
-                validation: {
-                    required: true,
-                    minLength: 5,
-                    maxLength: 5
-                },
-                isValid: false,
-                modified: false
-            },
-            country: {
-                elementType: 'input',
-                elementConfig: {
-                    type: 'text',
-                    placeholder: 'Country'
-                },
-                value: "",
-                validation: {
-                    required: true
-                },
-                isValid: false,
-                modified: false
-            },
-            email: {
-                elementType: 'input',
-                elementConfig: {
-                    type: 'email',
-                    placeholder: 'Your email'
-                },
-                value: "",
-                validation: {
-                    required: true,
-                    isEmail: true
-                },
-                isValid: false,
-                modified: false
-            },
-            delivery: {
-                elementType: 'select',
-                elementConfig: {
-                    options: [
-                        {value: 'fastest', displayValue: 'Fastest'},
-                        {value: 'cheapest', displayValue: 'Cheapest'}
-                    ]
-                },
-                value: "fastest",
-                validation: {},
-                isValid: true
-            }
-        },
-        formIsValid: false,
-    };
+const contactData = (props) => {
 
-    orderHandler = (event) => {
+    const [ orderForm, setOrderForm] = useState({
+        name: {
+            elementType: 'input',
+            elementConfig: {
+                type: 'text',
+                placeholder: 'Name'
+            },
+            value: "",
+            validation: {
+                required: true
+            },
+            isValid: false,
+            modified: false
+        },
+        address: {
+            elementType: 'input',
+            elementConfig: {
+                type: 'text',
+                placeholder: 'Your street address'
+            },
+            value: "",
+            validation: {
+                required: true
+            },
+            isValid: false,
+            modified: false
+        },
+        zipCode: {
+            elementType: 'input',
+            elementConfig: {
+                type: 'text',
+                placeholder: 'Your Zip Code'
+            },
+            value: "",
+            validation: {
+                required: true,
+                minLength: 5,
+                maxLength: 5
+            },
+            isValid: false,
+            modified: false
+        },
+        country: {
+            elementType: 'input',
+            elementConfig: {
+                type: 'text',
+                placeholder: 'Country'
+            },
+            value: "",
+            validation: {
+                required: true
+            },
+            isValid: false,
+            modified: false
+        },
+        email: {
+            elementType: 'input',
+            elementConfig: {
+                type: 'email',
+                placeholder: 'Your email'
+            },
+            value: "",
+            validation: {
+                required: true,
+                isEmail: true
+            },
+            isValid: false,
+            modified: false
+        },
+        delivery: {
+            elementType: 'select',
+            elementConfig: {
+                options: [
+                    {value: 'fastest', displayValue: 'Fastest'},
+                    {value: 'cheapest', displayValue: 'Cheapest'}
+                ]
+            },
+            value: "fastest",
+            validation: {},
+            isValid: true
+        }
+    });
+
+    const [ formIsValid, setFormIsValid ] = useState(false);
+
+    const orderHandler = (event) => {
         event.preventDefault();
 
         const formData = {};
-        for(let id in this.state.orderForm) {
-            formData[id] = this.state.orderForm[id].value;
+        for(let id in orderForm) {
+            formData[id] = orderForm[id].value;
         }
 
         const order = {
-            ingredients: this.props.ings,
-            price: this.props.price,
+            ingredients: props.ings,
+            price: props.price,
             formData: formData,
-            userId: this.props.userId
+            userId: props.userId
         }    
 
-        this.props.purchaseStartOrder(order, this.props.token);
+        props.purchaseStartOrder(order, props.token);
         // sending the order information to the database only if 
         
     }
 
-    changeHandler = (event, id) => {
+    const changeHandler = (event, id) => {
 
-        const updatedFormElm = updateObj(this.state.orderForm[id], {
+        const updatedFormElm = updateObj(orderForm[id], {
             value: event.target.value,
-            isValid: formValidation(event.target.value, this.state.orderForm[id].validation),
+            isValid: formValidation(event.target.value, orderForm[id].validation),
             modified: true
         })
-        const updatedOrderForm = updateObj(this.state.orderForm, {
+        const updatedOrderForm = updateObj(orderForm, {
             [id]: updatedFormElm
         });
 
-        let formIsValid = true;
+        let formValidated = true;
         for( let inputIdentifier in updatedOrderForm) {
-            formIsValid = updatedOrderForm[inputIdentifier].isValid && formIsValid;
+            formValidated = updatedOrderForm[inputIdentifier].isValid && formValidated;
         }
 
-        this.setState({
-            orderForm: updatedOrderForm,
-            formIsValid: formIsValid
-        })
+        setOrderForm(updatedOrderForm);
+        setFormIsValid(formValidated);
     }
 
-    render() {
         const formElementArray = [];
-        for( let key in this.state.orderForm) {
+        for( let key in orderForm) {
             formElementArray.push({
                 id: key,
-                config: this.state.orderForm[key]
+                config: orderForm[key]
             })
         }
         let form = (
-                <form onSubmit={this.orderHandler}>
+                <form onSubmit={orderHandler}>
                     {formElementArray.map(elm => {
                         return (
                             <Input 
@@ -161,17 +158,17 @@ class ContactData extends Component {
                                 shouldValidate={elm.config.validation}
                                 invalid={elm.config.isValid}
                                 modified={elm.config.modified}
-                                changed={(event) => {this.changeHandler(event, elm.id)}} 
+                                changed={(event) => {changeHandler(event, elm.id)}} 
                             />
                         )
                     })}
                     <Button 
                         btnType="Success"
-                        disabled={!this.state.formIsValid}
+                        disabled={!formIsValid}
                     >Order</Button>
                 </form>
         );
-        if (this.props.loading) {
+        if (props.loading) {
             form = <Spinner />;
         }
         return (
@@ -180,7 +177,6 @@ class ContactData extends Component {
                 {form} 
             </div>
         );
-    }
 }
 
 const mapStateToProps = state => {
@@ -199,4 +195,4 @@ const mapDispatchToProps = dispatch => {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(ContactData, axios));
+export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(contactData, axios));
