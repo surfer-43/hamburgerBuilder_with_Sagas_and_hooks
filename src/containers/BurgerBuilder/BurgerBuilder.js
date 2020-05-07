@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux'
 
 // custom components
@@ -25,19 +25,18 @@ import * as actions from '../../store/actions/index';
  * by adding the 'export' infront of class
  * we get a named export giving us access to the class so we can test it
  */
-export class BurgerBuilder extends Component {
+const burgerBuilder = (props) => {
     /**
      * initial state of the application
      */
-    state = {
-        inCheckout: false
-    }
+    const [ inCheckout, setInCheckout ] = useState(false);
 
-    componentDidMount () {
-        this.props.initIngredients();
-    }
+    useEffect(() => {
+        props.initIngredients();
+    }, []);
+    
 
-    updatePurchaseState (ingredients) {
+    const updatePurchaseState = (ingredients) => {
         // one way to see if the state should be switched
         // we are looping through all the elements in the array anyway just for a 
         // boolean flag... Array.every does the same thing and returns t/f if all 
@@ -52,20 +51,20 @@ export class BurgerBuilder extends Component {
         return sum > 0;
     }
 
-    checkoutHandler = () => {
-        if(this.props.authenticated) {
-            this.setState({inCheckout:true})
+    const checkoutHandler = () => {
+        if(props.authenticated) {
+            setInCheckout(true)
         } else {
-            this.props.onSetAuthRedirectPath('/checkout');
-            this.props.history.push('/auth');
+            props.onSetAuthRedirectPath('/checkout');
+            props.history.push('/auth');
         }
     }
 
-    clearModal = () => {
-        this.setState({inCheckout:false})
+    const clearModal = () => {
+        setInCheckout(false)
     }
 
-    checkoutContinueHandler = () => {
+    const checkoutContinueHandler = () => {
         /**
             * // create url with query params for the actual burger built
             * const burgerIngredient = Object.keys(this.state.ingredients);
@@ -81,61 +80,61 @@ export class BurgerBuilder extends Component {
         */
 
         // initializing the purchase state
-        this.props.initPurchase();
+        props.initPurchase();
 
         // with Redux:
-        this.props.history.push({pathname: "/checkout"});
+        props.history.push({pathname: "/checkout"});
     }
     
-    render() {
+    
         const disabledInfo = {
-            ...this.props.ings
+            ...props.ings
         };
 
-        let burger = this.props.error ? <p> Ingredients can't be loaded</p> : <Spinner /> 
+        let burger = props.error ? <p> Ingredients can't be loaded</p> : <Spinner /> 
         let orderSummary = null;
 
         for(let key in disabledInfo) {
             disabledInfo[key] = disabledInfo[key] <= 0 
         }
 
-        if(this.props.ings) {
+        if(props.ings) {
             burger = (
                 <Aux>
-                    <Burger ingredients={this.props.ings}/>
+                    <Burger ingredients={props.ings}/>
                     <BuildControls 
-                        ingredientAdded={this.props.addIngredient}
-                        ingredientRemoved={this.props.removeIngredient}
+                        ingredientAdded={props.addIngredient}
+                        ingredientRemoved={props.removeIngredient}
                         disabled={disabledInfo}
-                        purchasable={this.updatePurchaseState(this.props.ings)}
-                        checkout={this.checkoutHandler}
-                        price={this.props.price}
-                        isAuth={this.props.authenticated}
-                        modifyPrice={this.props.modifyPrice}
+                        purchasable={updatePurchaseState(props.ings)}
+                        checkout={checkoutHandler}
+                        price={props.price}
+                        isAuth={props.authenticated}
+                        modifyPrice={props.modifyPrice}
                     />  
                 </Aux>
             );
 
             orderSummary = <OrerSummary 
-                checkoutCancel={this.clearModal}
-                checkoutContinue={this.checkoutContinueHandler}
-                ingredients={this.props.ings}
-                price={this.props.price}
+                checkoutCancel={clearModal}
+                checkoutContinue={checkoutContinueHandler}
+                ingredients={props.ings}
+                price={props.price}
             />
         }
 
         return (
             <Aux>
                 <Modal 
-                    show={this.state.inCheckout}
-                    modalClosed={this.clearModal}
+                    show={inCheckout}
+                    modalClosed={clearModal}
                 >
                     {orderSummary}
                 </Modal>
                 {burger}
             </Aux>
         );
-    }
+    
 }
 
 const mapStateToProps = state => {
@@ -161,4 +160,4 @@ const mapDispatchToProps = dispatch => {
  * the higher order component used here needs to be used with axios or some other
  * method to make http requests and handle interceptors
  */
-export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(BurgerBuilder, axios));
+export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(burgerBuilder, axios));
