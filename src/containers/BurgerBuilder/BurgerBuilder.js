@@ -26,14 +26,15 @@ import * as actions from '../../store/actions/index';
  * we get a named export giving us access to the class so we can test it
  */
 const burgerBuilder = (props) => {
+    const { initIngredients } = props;
     /**
      * initial state of the application
      */
     const [ inCheckout, setInCheckout ] = useState(false);
 
     useEffect(() => {
-        props.initIngredients();
-    }, []);
+        initIngredients();
+    }, [ initIngredients ]);
     
 
     const updatePurchaseState = (ingredients) => {

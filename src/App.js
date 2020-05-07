@@ -19,10 +19,11 @@ const Orders = React.lazy(() => {
 })
 // class App extends Component {
   const app = (props) => {
+    const { tryAutoSignup } = props;
 
     useEffect(() => {
-      props.tryAutoSignup();
-    }, []);
+      tryAutoSignup();
+    }, [tryAutoSignup]);
     let routes = (
       <Switch>
         <Route path="/auth" render={(props) => <Auth {...props}/>} />

@@ -17,6 +17,7 @@ import * as actions from '../../store/actions/index';
 
 
 const auth = props => {
+    const { buildingBurger, onSetAuthRedirectPath, authRedirectPath } = props;
     const [controls, setControls] = useState(
         {
         
@@ -55,10 +56,10 @@ const auth = props => {
     
 
     useEffect(() => {
-        if(!props.buildingBurger && props.authRedirectPath !== '/') {
-            props.onSetAuthRedirectPath(props.authRedirectPath);
+        if(!buildingBurger && authRedirectPath !== '/') {
+            onSetAuthRedirectPath(authRedirectPath);
         }
-    }, [])
+    }, [ buildingBurger, onSetAuthRedirectPath, authRedirectPath ])
 
     const inputChangeHandler = (event, controlName) => {
         const updatedControls = updateObj(controls, {
